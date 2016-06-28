@@ -163,40 +163,82 @@ function paytpv_storeremote($params){
     $tdmin = $params['tdmin'];
 
     $client = new SoapClient( 'https://secure.paytpv.com/gateway/xml_bankstore.php?wsdl');
-            
+
+
+
     $DS_MERCHANT_MERCHANTCODE = $clientcode;
     $DS_MERCHANT_TERMINAL = $term;
     $DS_MERCHANT_PAN = $cardNumber;
     $DS_MERCHANT_EXPIRYDATE = $cardExpiry;
     $DS_MERCHANT_CVV2 = $cardCvv;
     $DS_MERCHANT_ORDER = str_pad($invoiceId, 8, "0", STR_PAD_LEFT);
-    $DS_MERCHANT_MERCHANTSIGNATURE = sha1($DS_MERCHANT_MERCHANTCODE . $DS_MERCHANT_PAN . $DS_MERCHANT_CVV2 . $DS_MERCHANT_TERMINAL . $pass);
 
-    $DS_ORIGINAL_IP = $_SERVER['REMOTE_ADDR'];
+    $action = $params["action"];
 
-    $p = array(
+    // Delete card
+    if ($action=="delete"){
+        $gatewayId = $params['gatewayid'];
+        $datos = explode(",",$gatewayId);
+        $DS_IDUSER = $datos[0];
+        $DS_TOKEN_USER = $datos[1];
 
-        'DS_MERCHANT_MERCHANTCODE' => $DS_MERCHANT_MERCHANTCODE,
-        'DS_MERCHANT_TERMINAL' => $DS_MERCHANT_TERMINAL,
-        'DS_MERCHANT_PAN' => $DS_MERCHANT_PAN,
-        'DS_MERCHANT_EXPIRYDATE' => $DS_MERCHANT_EXPIRYDATE,
-        'DS_MERCHANT_CVV2' => $DS_MERCHANT_CVV2,
-        'DS_MERCHANT_MERCHANTSIGNATURE' => $DS_MERCHANT_MERCHANTSIGNATURE,
-        'DS_ORIGINAL_IP' => $DS_ORIGINAL_IP
-    );
+        $DS_MERCHANT_MERCHANTSIGNATURE = sha1($DS_MERCHANT_MERCHANTCODE . $DS_IDUSER . $DS_TOKEN_USER . $DS_MERCHANT_TERMINAL . $pass);
 
-    $res = $client->__soapCall( 'add_user', $p);
+        $DS_ORIGINAL_IP = $_SERVER['REMOTE_ADDR'];
 
-    if ('' == $res['DS_ERROR_ID'] || 0 == $res['DS_ERROR_ID']){
-        $DS_IDUSER = $res['DS_IDUSER'];
-        $DS_TOKEN_USER = $res['DS_TOKEN_USER'];
-        return array(
-            "status" => "success",
-            "gatewayid" => $DS_IDUSER.",".$DS_TOKEN_USER,
-            "rawdata" => $res,
+        $p = array(
+
+            'DS_MERCHANT_MERCHANTCODE' => $DS_MERCHANT_MERCHANTCODE,
+            'DS_MERCHANT_TERMINAL' => $DS_MERCHANT_TERMINAL,
+            'DS_IDUSER' => $DS_IDUSER,
+            'DS_TOKEN_USER' => $DS_TOKEN_USER,
+            'DS_MERCHANT_MERCHANTSIGNATURE' => $DS_MERCHANT_MERCHANTSIGNATURE,
+            'DS_ORIGINAL_IP' => $DS_ORIGINAL_IP
         );
-    }
 
+        $res = $client->__soapCall( 'remove_user', $p);
+
+        if ('' == $res['DS_ERROR_ID'] || 0 == $res['DS_ERROR_ID']){
+
+            return array(
+                "status" => "success",
+                "gatewayid" => "",
+                "rawdata" => $res,
+            );
+        }
+        
+    // Update/New Card
+    }else{
+        $DS_MERCHANT_MERCHANTSIGNATURE = sha1($DS_MERCHANT_MERCHANTCODE . $DS_MERCHANT_PAN . $DS_MERCHANT_CVV2 . $DS_MERCHANT_TERMINAL . $pass);
+
+        $DS_ORIGINAL_IP = $_SERVER['REMOTE_ADDR'];
+
+        $p = array(
+
+            'DS_MERCHANT_MERCHANTCODE' => $DS_MERCHANT_MERCHANTCODE,
+            'DS_MERCHANT_TERMINAL' => $DS_MERCHANT_TERMINAL,
+            'DS_MERCHANT_PAN' => $DS_MERCHANT_PAN,
+            'DS_MERCHANT_EXPIRYDATE' => $DS_MERCHANT_EXPIRYDATE,
+            'DS_MERCHANT_CVV2' => $DS_MERCHANT_CVV2,
+            'DS_MERCHANT_MERCHANTSIGNATURE' => $DS_MERCHANT_MERCHANTSIGNATURE,
+            'DS_ORIGINAL_IP' => $DS_ORIGINAL_IP
+        );
+
+        $res = $client->__soapCall( 'add_user', $p);
+
+        if ('' == $res['DS_ERROR_ID'] || 0 == $res['DS_ERROR_ID']){
+            $DS_IDUSER = $res['DS_IDUSER'];
+            $DS_TOKEN_USER = $res['DS_TOKEN_USER'];
+
+            //$params['cardnum'] = "";
+
+            return array(
+                "status" => "success",
+                "gatewayid" => $DS_IDUSER.",".$DS_TOKEN_USER,
+                "rawdata" => $res,
+            );
+        }
+    }
 
     return array(
         "status" => "failed",
@@ -307,6 +349,9 @@ function paytpv_capture($params){
 
                 // Save token, remove cardnumer
                 update_query( "tblclients", array( "gatewayid" => implode( ",", $arrGatewayId ), "cardnum" => ""), array("id" => $params['clientdetails']['userid']));
+
+            }else{
+                $responseData = $res;
 
             }
         }
