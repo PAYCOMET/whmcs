@@ -175,6 +175,10 @@ function paytpv_storeremote($params){
 
     $action = $params["action"];
 
+    $DS_ORIGINAL_IP = $_SERVER['REMOTE_ADDR'];
+    if ($DS_ORIGINAL_IP=="")
+        $DS_ORIGINAL_IP = $_SERVER['SERVER_ADDR'];
+
     // Delete card
     if ($action=="delete"){
         $gatewayId = $params['gatewayid'];
@@ -183,8 +187,6 @@ function paytpv_storeremote($params){
         $DS_TOKEN_USER = $datos[1];
 
         $DS_MERCHANT_MERCHANTSIGNATURE = sha1($DS_MERCHANT_MERCHANTCODE . $DS_IDUSER . $DS_TOKEN_USER . $DS_MERCHANT_TERMINAL . $pass);
-
-        $DS_ORIGINAL_IP = $_SERVER['REMOTE_ADDR'];
 
         $p = array(
 
@@ -210,8 +212,6 @@ function paytpv_storeremote($params){
     // Update/New Card
     }else{
         $DS_MERCHANT_MERCHANTSIGNATURE = sha1($DS_MERCHANT_MERCHANTCODE . $DS_MERCHANT_PAN . $DS_MERCHANT_CVV2 . $DS_MERCHANT_TERMINAL . $pass);
-
-        $DS_ORIGINAL_IP = $_SERVER['REMOTE_ADDR'];
 
         $p = array(
 
@@ -278,6 +278,7 @@ function paytpv_capture($params){
     $refundAmount = $params['amount'];
     $currencyCode = $params['currency'];
 
+
     // perform API call to initiate refund and interpret result
     try{
         $client = new SoapClient( 'https://secure.paytpv.com/gateway/xml_bankstore.php?wsdl');
@@ -293,6 +294,8 @@ function paytpv_capture($params){
         $DS_MERCHANT_AMOUNT = number_format($amount * 100, 0, '.', '');
         
         $DS_ORIGINAL_IP = $_SERVER['REMOTE_ADDR'];
+        if ($DS_ORIGINAL_IP=="")
+            $DS_ORIGINAL_IP = $_SERVER['SERVER_ADDR'];
         
         $success = 'error';
         $responseData = '';
@@ -572,6 +575,9 @@ function paytpv_refund($params)
     $DS_MERCHANT_MERCHANTSIGNATURE = sha1($DS_MERCHANT_MERCHANTCODE . $DS_IDUSER . $DS_TOKEN_USER . $DS_MERCHANT_TERMINAL . $DS_MERCHANT_AUTHCODE . $DS_MERCHANT_ORDER . $pass);
 
     $DS_ORIGINAL_IP = $_SERVER['REMOTE_ADDR'];
+    if ($DS_ORIGINAL_IP=="")
+        $DS_ORIGINAL_IP = $_SERVER['SERVER_ADDR'];
+
 
     $p = array(
 
