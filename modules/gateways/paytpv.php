@@ -135,6 +135,10 @@ function paytpv_config()
 
 function paytpv_storeremote($params){
 
+    global $remote_ip;
+    if ($remote_ip=="")
+        $remote_ip = gethostbyname(gethostname());
+
     $testmode = ($params['testmode']) ? 1:0;
 
     if ($testmode==1){
@@ -175,9 +179,7 @@ function paytpv_storeremote($params){
 
     $action = $params["action"];
 
-    $DS_ORIGINAL_IP = $_SERVER['REMOTE_ADDR'];
-    if ($DS_ORIGINAL_IP=="")
-        $DS_ORIGINAL_IP = $_SERVER['SERVER_ADDR'];
+    $DS_ORIGINAL_IP = $remote_ip;
 
     // Delete card
     if ($action=="delete"){
@@ -249,6 +251,10 @@ function paytpv_storeremote($params){
 
 function paytpv_capture($params){
 
+    global $remote_ip;
+    if ($remote_ip=="")
+        $remote_ip = gethostbyname(gethostname());
+
     // Gateway Configuration Parameters
     $clientcode = $params['clientcode'];
     $term = $params['term'];
@@ -292,10 +298,8 @@ function paytpv_capture($params){
         $DS_MERCHANT_AUTHCODE = $transactionIdToRefund;
         $DS_MERCHANT_CURRENCY = $currencyCode;
         $DS_MERCHANT_AMOUNT = number_format($amount * 100, 0, '.', '');
-        
-        $DS_ORIGINAL_IP = $_SERVER['REMOTE_ADDR'];
-        if ($DS_ORIGINAL_IP=="")
-            $DS_ORIGINAL_IP = $_SERVER['SERVER_ADDR'];
+
+        $DS_ORIGINAL_IP = $remote_ip;
         
         $success = 'error';
         $responseData = '';
@@ -532,6 +536,9 @@ if ($isSecureTransaction){
  */
 function paytpv_refund($params)
 {
+    global $remote_ip;
+    if ($remote_ip=="")
+        $remote_ip = gethostbyname(gethostname());
     
     // Gateway Configuration Parameters
     $testmode = ($params['testmode']) ? 1:0;
@@ -574,9 +581,7 @@ function paytpv_refund($params)
     $DS_MERCHANT_AMOUNT = $importe = number_format($refundAmount * 100, 0, '.', '');
     $DS_MERCHANT_MERCHANTSIGNATURE = sha1($DS_MERCHANT_MERCHANTCODE . $DS_IDUSER . $DS_TOKEN_USER . $DS_MERCHANT_TERMINAL . $DS_MERCHANT_AUTHCODE . $DS_MERCHANT_ORDER . $pass);
 
-    $DS_ORIGINAL_IP = $_SERVER['REMOTE_ADDR'];
-    if ($DS_ORIGINAL_IP=="")
-        $DS_ORIGINAL_IP = $_SERVER['SERVER_ADDR'];
+    $DS_ORIGINAL_IP = $remote_ip;
 
 
     $p = array(
