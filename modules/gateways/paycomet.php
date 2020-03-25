@@ -553,15 +553,15 @@ if ($isSecureTransaction){
             'IDUSER' => $DS_IDUSER,
             'TOKEN_USER' => $DS_TOKEN_USER,          
             '3DSECURE' => 1,
-            'URLOK' => $systemUrl . '/viewinvoice.php?id=' . $invoiceId,
-            'URLKO' => $systemUrl . '/viewinvoice.php?id=' . $invoiceId
+            'URLOK' => $systemUrl . 'viewinvoice.php?id=' . $invoiceId,
+            'URLKO' => $systemUrl . 'viewinvoice.php?id=' . $invoiceId
         );
 
         $url = "https://api.paycomet.com/gateway/ifr-bankstore";
 
         $htmlOutput = '<form method="get" action="'.$url.'">';
         foreach ($postfields as $k => $v) {
-            $htmlOutput .= '<input type="hidden" name="' . $k . '" value="' . urlencode($v) . '" />';
+            $htmlOutput .= '<input type="hidden" name="' . $k . '" value="' . $v . '" />';
         }
         
         $htmlOutput .= '<input type="submit" value="' . $langPayNow . '" />';
