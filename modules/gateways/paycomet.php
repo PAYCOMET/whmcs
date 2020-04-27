@@ -6,7 +6,7 @@
  * PAYCOMET - Pasarela de pagos PCI-DSS Nivel 1 Multiplataforma
  *
  * @package    paycomet.php
- * @author     dsfs <info@paycomet.com>
+ * @author     PAYCOMET <info@paycomet.com>
  * @copyright  2020 PAYCOMET
  * @version    2.1
  *
