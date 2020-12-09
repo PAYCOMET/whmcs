@@ -7,7 +7,7 @@
  *
  * @package    paycomet.php
  * @author     PAYCOMET <info@paycomet.com>
- * @version    2.2
+ * @version    2.3
  * @copyright  2020 PAYCOMET
  *
 **/
@@ -83,20 +83,18 @@ switch ($TransactionType) {
 if ($NotificationHash != $local_sign) {
     $transactionStatus = 'Hash Verification Failure';
     $success = false;
-}else{
+} else {
     $success = true;
 }
 
 switch ($TransactionType) {
     case 1: // execute_purchase
-
         // Si es pago con Tarjeta (methodId = 1) y no llega no llega el IdUser es un pago execute_purchase ya procesado. No hacemos nada
-        if ((isset($_POST['MethodId']) && $_POST['MethodId']==1) && !isset($_POST["IdUser"])){
+        if ((isset($_POST['MethodId']) && $_POST['MethodId']==1) && !isset($_POST["IdUser"])) {
             return;
         }
 
         if ($success) {
-
             /**
              * Validate Callback Invoice ID.
              *
@@ -155,9 +153,9 @@ switch ($TransactionType) {
             $paymentSuccess = true;
 
             // Si es pago sin tarjeta, y llega el token, lo almacenamos para futuras compras
-            if ($_POST['MethodId']==1 && isset($_POST["IdUser"])){
+            if ($_POST['MethodId']==1 && isset($_POST["IdUser"])) {
 
-                $userid = Capsule::table('tblinvoices')->where('id',$invoiceId)->value('userid');                
+                $userid = Capsule::table('tblinvoices')->where('id',$invoiceId)->value('userid');
 
                 if ($userid > 0) {
                     $resultSaveToken = saveToken($_POST, $userid, $invoiceId, $TransactionType);
@@ -179,16 +177,14 @@ switch ($TransactionType) {
 
 
 function saveToken($arrData, $userid, $invoiceId = 0, $TransactionType=1) {
-
-
     global $remote_ip, $apikey, $clientcode, $TpvID, $pass, $gatewayModuleName;
     $arrGatewayId = array($arrData["IdUser"],$arrData["TokenUser"]);
 
     // Obtenemos información de la tarjeta
     try {
-
-        if ($remote_ip=="")
+        if ($remote_ip=="") {
             $remote_ip = "127.0.0.1";
+        }
 
         $DS_ORIGINAL_IP = $remote_ip;
         $cardnum = $cardExpiryDate = $cardBrand = "";
@@ -203,17 +199,13 @@ function saveToken($arrData, $userid, $invoiceId = 0, $TransactionType=1) {
                     $TpvID
                 );
                 if ($apiResponse->errorCode==0) {
-
                     $arrExpDate = explode("/",$apiResponse->expiryDate);
                     $cardExpiryDate = $arrExpDate[1] . substr($arrExpDate[0],2,2);
                     $cardnum = substr($apiResponse->pan,-4);
                     $cardBrand = $apiResponse->cardBrand;
                 }
-
             } catch (exception $e){}
-
         } else {
-
             $DS_MERCHANT_MERCHANTSIGNATURE = hash('sha512', $clientcode . $arrData["IdUser"] . $arrData["TokenUser"] . $TpvID . $pass);
 
             $p = array(
@@ -229,7 +221,7 @@ function saveToken($arrData, $userid, $invoiceId = 0, $TransactionType=1) {
             $client = new SoapClient('https://api.paycomet.com/gateway/xml-bankstore?wsdl');
             $res = $client->__soapCall( 'info_user', $p);
 
-            if ('' == $res['DS_ERROR_ID'] || 0 == $res['DS_ERROR_ID']){
+            if ('' == $res['DS_ERROR_ID'] || 0 == $res['DS_ERROR_ID']) {
                 $arrExpDate = explode("/",$res['DS_EXPIRYDATE']);
                 $cardExpiryDate = $arrExpDate[1] . substr($arrExpDate[0],2,2);
                 $cardnum = substr($res['DS_MERCHANT_PAN'],-4);
@@ -246,7 +238,6 @@ function saveToken($arrData, $userid, $invoiceId = 0, $TransactionType=1) {
             $arrDatos = explode("/",$userid);
             $action = "";
             try {
-
                 // add_user, no llega el metodo de pago
                 if (sizeof($arrDatos)==1) {
                     $action = "Create";
@@ -261,8 +252,6 @@ function saveToken($arrData, $userid, $invoiceId = 0, $TransactionType=1) {
                         null, //issue number
                         implode( ",", $arrGatewayId )
                     );
-
-
                 } else if (sizeof($arrDatos)==2) {
                     // Function available in WHMCS 7.9 and later
                     $action = "Update";
@@ -280,12 +269,9 @@ function saveToken($arrData, $userid, $invoiceId = 0, $TransactionType=1) {
 
                 }
 
-                 // Log to gateway log as successful.
-                 logTransaction($gatewayModuleName, $_POST, $action .' Success');
-
-
+                // Log to gateway log as successful.
+                logTransaction($gatewayModuleName, $_POST, $action .' Success');
             } catch (Exception $e) {
-
                 // Log to gateway log as unsuccessful.
                 logTransaction($gatewayModuleName, $_POST, $action .' Failed');
 

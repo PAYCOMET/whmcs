@@ -35,12 +35,12 @@ class ApiRest
         $subscription = []
     ) {
         $params = [
-            "operationType" => (int) $operationType,
-            "language" => (string) $language,
-            "terminal" => (int) $terminal,
-            "productDescription" => (string) $productDescription,
-            "payment" => $payment,
-            "subscription" => $subscription
+            "operationType"         => (int) $operationType,
+            "language"              => (string) $language,
+            "terminal"              => (int) $terminal,
+            "productDescription"    => (string) $productDescription,
+            "payment"               => (array) $payment,
+            "subscription"          => (array) $subscription
         ];
 
         return $this->executeRequest('/v1/form', $params);
@@ -54,27 +54,26 @@ class ApiRest
         $language = 'ES'
     ) {
         $params = [
-            "terminal" => (int) $terminal,
-            "jetToken" => (string) $jetToken,
-            "order" => (string) $order,
-            "productDescription" => (string) $productDescription,
-            "language" => (string) $language
+            "terminal"              => (int) $terminal,
+            "jetToken"              => (string) $jetToken,
+            "order"                 => (string) $order,
+            "productDescription"    => (string) $productDescription,
+            "language"              => (string) $language
         ];
 
         return $this->executeRequest('/v1/cards', $params);
     }
-    
+
     public function infoUser(
         $idUser,
         $tokenUser,
         $terminal
     ) {
         $params = [
-            'idUser' => (int) $idUser,
-            'tokenUser' => (string) $tokenUser,
-            'terminal' => (string) $terminal,
+            'idUser'        => (int) $idUser,
+            'tokenUser'     => (string) $tokenUser,
+            'terminal'      => (int) $terminal,
         ];
-            
         return $this->executeRequest('/v1/cards/info', $params);
     }
 
@@ -84,11 +83,10 @@ class ApiRest
         $tokenUser
     ) {
         $params = [
-            'terminal' => (string) $terminal,
-            'idUser' => (int) $idUser,
-            'tokenUser' => (string) $tokenUser,
+            'terminal'      => (int) $terminal,
+            'idUser'        => (int) $idUser,
+            'tokenUser'     => (string) $tokenUser,
         ];
-            
         return $this->executeRequest('/v1/cards/delete', $params);
     }
 
@@ -104,7 +102,7 @@ class ApiRest
         $tokenUser= '',
         $urlOk = '',
         $ulrKo = '',
-        $scoring = '0',
+        $scoring = 0,
         $productDescription = '',
         $merchantDescription = '',
         $userInteraction = 1,
@@ -114,30 +112,31 @@ class ApiRest
         $notifyDirectPayment = 1,
         $merchantData = []
     ) {
-        $params = ["payment" => [
-                'terminal' => (int) $terminal,
-                'order' => (string) $order,
-                'amount' => (string) $amount,
-                'currency' => (string) $currency,
-                'methodId' => (string) $methodId,
-                'originalIp' => (string) $originalIp,
-                'secure' => (string) $secure,
-                'idUser' => (int) $idUser,
-                'tokenUser' => (string) $tokenUser,
-                'scoring' => (string) $scoring,
-                'productDescription' => (string) $productDescription,
-                'merchantDescription' => (string) $merchantDescription,
-                'userInteraction' => (string) $userInteraction,
-                'escrowTargets' => $escrowTargets,
-                'trxType' => (string) $trxType,
-                'SCAException' => (string) $SCAException,
-                'urlOk' => (string) $urlOk,
-                'ulrKo' => (string) $ulrKo,
-                'notifyDirectPayment' => (int) $notifyDirectPayment,
-                'merchantData' => $merchantData
+        $params = ["payment" => 
+            [
+                'terminal'              => (int) $terminal,
+                'order'                 => (string) $order,
+                'amount'                => (string) $amount,
+                'currency'              => (string) $currency,
+                'methodId'              => (int) $methodId,
+                'originalIp'            => (string) $originalIp,
+                'secure'                => (int) $secure,
+                'idUser'                => (int) $idUser,
+                'tokenUser'             => (string) $tokenUser,
+                'scoring'               => (int) $scoring,
+                'productDescription'    => (string) $productDescription,
+                'merchantDescription'   => (string) $merchantDescription,
+                'userInteraction'       => (int) $userInteraction,
+                'escrowTargets'         => (array) $escrowTargets,
+                'trxType'               => (string) $trxType,
+                'SCAException'          => (string) $SCAException,
+                'urlOk'                 => (string) $urlOk,
+                'ulrKo'                 => (string) $ulrKo,
+                'notifyDirectPayment'   => (int) $notifyDirectPayment,
+                'merchantData'          => (array) $merchantData
             ]
         ];
-                        
+
         return $this->executeRequest('/v1/payments', $params);
     }
 
@@ -154,7 +153,7 @@ class ApiRest
         $tokenUser= '',
         $urlOk = '',
         $ulrKo = '',
-        $scoring = '0',
+        $scoring = 0,
         $productDescription = '',
         $merchantDescription = '',
         $userInteraction = 1,
@@ -164,29 +163,30 @@ class ApiRest
         $merchantData = [],
         $deferred = 0
     ) {
-        $params = ["payment" => [
-                'terminal' => (int) $terminal,
-                'order' => (string) $order,
-                'amount' => (string) $amount,
-                'currency' => (string) $currency,
-                'methodId' => (string) $methodId,
-                'originalIp' => (string) $originalIp,
-                'secure' => (string) $secure,
-                'idUser' => (int) $idUser,
-                'tokenUser' => (string) $tokenUser,
-                'scoring' => (string) $scoring,
-                'productDescription' => (string) $productDescription,
-                'merchantDescription' => (string) $merchantDescription,
-                'userInteraction' => (string) $userInteraction,
-                'escrowTargets' => $escrowTargets,
-                'trxType' => (string) $trxType,
-                'SCAException' => (string) $SCAException,
-                'urlOk' => (string) $urlOk,
-                'ulrKo' => (string) $ulrKo,
-                'merchantData' => $merchantData,
-                'deferred' => $deferred
+        $params = ["payment" => 
+            [
+                'terminal'              => (int) $terminal,
+                'order'                 => (string) $order,
+                'amount'                => (string) $amount,
+                'currency'              => (string) $currency,
+                'methodId'              => (int) $methodId,
+                'originalIp'            => (string) $originalIp,
+                'secure'                => (int) $secure,
+                'idUser'                => (int) $idUser,
+                'tokenUser'             => (string) $tokenUser,
+                'scoring'               => (int) $scoring,
+                'productDescription'    => (string) $productDescription,
+                'merchantDescription'   => (string) $merchantDescription,
+                'userInteraction'       => (int) $userInteraction,
+                'escrowTargets'         => (array) $escrowTargets,
+                'trxType'               => (string) $trxType,
+                'SCAException'          => (string) $SCAException,
+                'urlOk'                 => (string) $urlOk,
+                'ulrKo'                 => (string) $ulrKo,
+                'merchantData'          => (array) $merchantData,
+                'deferred'              => (int) $deferred
             ]
-        ];        
+        ];
 
         return $this->executeRequest('/v1/payments/preauth', $params);
     }
@@ -194,22 +194,21 @@ class ApiRest
 
     public function confirmPreautorization(
         $order,
-        $terminal,        
+        $terminal,
         $amount,
         $originalIp,
         $authCode,
         $deferred = 0
     ) {
-        $params =   ["payment" => 
-                        [
-                            'terminal' => (int) $terminal,                
-                            'amount' => (string) $amount,
-                            'originalIp' => (string) $originalIp,
-                            'authCode' => (string) $authCode,
-                            'deferred' => $deferred
-                        ]
-                    ];
-
+        $params = ["payment" => 
+            [
+                'terminal'      => (int) $terminal,
+                'amount'        => (string) $amount,
+                'originalIp'    => (string) $originalIp,
+                'authCode'      => (string) $authCode,
+                'deferred'      => (int) $deferred
+            ]
+        ];
         return $this->executeRequest('/v1/payments/' . $order . '/preauth/confirm', $params);
     }
 
@@ -237,35 +236,35 @@ class ApiRest
         $SCAException = '',
         $merchantData = []
     ) {
-        $params = ["subscription" => [
-                    "startDate" => (string) $startDate,
-                    "endDate" => (string) $endDate,
-                    "periodicity" => (string) $periodicity,
-                ],
-                ["payment" => [
-                    "terminal" => (int) $terminal,
-                    "methodId" => (string) $methodId,
-                    "order" => (string) $order,
-                    "amount" => (string) $amount,
-                    "currency" => (string) $currency,
-                    "originalIp" => (string) $originalIp,
-                    "idUser" => (int) $idUser,
-                    "tokenUser" => (string) $tokenUser,
-                    "secure" => (string) $secure,
-                    "scoring" => (string) $scoring,
-                    "productDescription" => (string) $productDescription,
-                    "merchantDescriptor" => (string) $merchantDescriptor,
-                    "userInteraction" => (string) $userInteraction,
-                    "escrowTargets" => $escrowTargets,
-                    "trxType" => (string) $trxType,
-                    "SCAException" => (string) $SCAException,
-                    "urlOk" => (string) $urlOk,
-                    "urlKo" => (string) $urlKo,
-                    "merchantData" => $merchantData,
-                ]
+        $params = [
+            "subscription" => 
+            [
+                "startDate"             => (string) $startDate,
+                "endDate"               => (string) $endDate,
+                "periodicity"           => (string) $periodicity,
+            ],
+            "payment" => [
+                "terminal"              => (int) $terminal,
+                "methodId"              => (int) $methodId,
+                "order"                 => (string) $order,
+                "amount"                => (string) $amount,
+                "currency"              => (string) $currency,
+                "originalIp"            => (string) $originalIp,
+                "idUser"                => (int) $idUser,
+                "tokenUser"             => (string) $tokenUser,
+                "secure"                => (int) $secure,
+                "scoring"               => (int) $scoring,
+                "productDescription"    => (string) $productDescription,
+                "merchantDescriptor"    => (string) $merchantDescriptor,
+                "userInteraction"       => (int) $userInteraction,
+                "escrowTargets"         => (array) $escrowTargets,
+                "trxType"               => (string) $trxType,
+                "SCAException"          => (string) $SCAException,
+                "urlOk"                 => (string) $urlOk,
+                "urlKo"                 => (string) $urlKo,
+                "merchantData"          => (array) $merchantData
             ]
         ];
-
         return $this->executeRequest('/v1/subscription', $params);
     }
 
@@ -275,14 +274,14 @@ class ApiRest
         $idUser,
         $tokenUser
     ) {
-        $params = ["payment" => [
-                'terminal' => (int) $terminal,
-                'order' => (string) $order,
-                'idUser' => (int) $idUser,
-                'tokenUser' => (string) $tokenUser
+        $params = ["payment" => 
+            [
+                'terminal'      => (int) $terminal,
+                'order'         => (string) $order,
+                'idUser'        => (int) $idUser,
+                'tokenUser'     => (string) $tokenUser
             ]
         ];
-
         return $this->executeRequest('/v1/subscription/' . $order . '/remove', $params);
     }
 
@@ -295,17 +294,16 @@ class ApiRest
         $originalIp,
         $notifyDirectPayment = 1
     ) {
-        $params = [
-            "payment" => [
-                'terminal' => (int) $terminal,
-                'amount' => (string) $amount,
-                'currency' => (string) $currency,
-                'authCode' => (string) $authCode,
-                'originalIp' => (string) $originalIp,
-                'notifyDirectPayment' => (int) $notifyDirectPayment
+        $params = ["payment" => 
+            [
+                'terminal'              => (int) $terminal,
+                'amount'                => (string) $amount,
+                'currency'              => (string) $currency,
+                'authCode'              => (string) $authCode,
+                'originalIp'            => (string) $originalIp,
+                'notifyDirectPayment'   => (int) $notifyDirectPayment
             ]
         ];
-
         return $this->executeRequest('/v1/payments/' . $order . '/refund', $params);
     }
 
@@ -331,9 +329,9 @@ class ApiRest
                     "Content-Type: application/json"
             ),
         ));
-        
+
         $response = curl_exec($curl);
-        
+
         curl_close($curl);
 
         return json_decode($response);

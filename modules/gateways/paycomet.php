@@ -8,7 +8,7 @@
  * @package    paycomet.php
  * @author     PAYCOMET <info@paycomet.com>
  * @copyright  2020 PAYCOMET
- * @version    2.2
+ * @version    2.3
  *
 **/
 
@@ -144,9 +144,9 @@ function paycomet_nolocalcc() {}
  *
  * @return array
  */
-function paycomet_capture($params){   
+function paycomet_capture($params){
     global $remote_ip;
-        
+
     if (!filter_var($remote_ip,FILTER_VALIDATE_IP)) {
         $remote_ip = CurrentUser::getIP();
 
@@ -158,7 +158,7 @@ function paycomet_capture($params){
             }
         }
     }
-        
+
     // Gateway Configuration Parameters
     $apikey = trim($params['apikey']);
     $clientcode = $params['clientcode'];
@@ -193,13 +193,12 @@ function paycomet_capture($params){
     $datos = explode(",",$gatewayId);
     $DS_IDUSER = $datos[0];
     $DS_TOKEN_USER = $datos[1];
-    
 
     // REST
     if ($apikey != "") {
 
-        $merchantData = paycomet_getMerchantData($params);       
-        
+        $merchantData = paycomet_getMerchantData($params);
+
         // Por defecto MERCHANT_TRX_TYPE = M
         $trxType = "M";
 
@@ -207,17 +206,17 @@ function paycomet_capture($params){
         if (paycomet_haveRecurringProduct($params)) {
             $trxType = "R";
 
-            $dateAux = new \DateTime("now");            
+            $dateAux = new \DateTime("now");
             $dateAux->modify('+10 year'); 
             $recurringExpiry = $dateAux->format('Ymd'); // Fecha actual + 10 años.
-            
+
             $merchantData["recurringExpiry"] = $recurringExpiry; 
             $merchantData["recurringFrequency"] = "1";
         };
 
-        $secure = '0';
-        $methodId = '1';
-        $userInteraction = '0';
+        $secure = 0;
+        $methodId = 1;
+        $userInteraction = 0;
         $notifyDirectPayment = 2; // Sin notificacion http
 
         $res = array();
@@ -254,9 +253,7 @@ function paycomet_capture($params){
         } catch (Exception $e) {
             $res["DS_ERROR_ID"] = $apiResponse->errorCode;
         }
-        
     } else {
-
         $client = new SoapClient( 'https://api.paycomet.com/gateway/xml-bankstore?wsdl');
 
         $DS_MERCHANT_MERCHANTSIGNATURE = hash('sha512', $DS_MERCHANT_MERCHANTCODE . $DS_IDUSER . $DS_TOKEN_USER . $DS_MERCHANT_TERMINAL . $DS_MERCHANT_AMOUNT . $DS_MERCHANT_ORDER . $pass);
@@ -276,10 +273,9 @@ function paycomet_capture($params){
         );
 
         $res = $client->__soapCall( 'execute_purchase', $p);
-
     }
 
-    if ('' == $res['DS_ERROR_ID'] || 0 == $res['DS_ERROR_ID']){
+    if ('' == $res['DS_ERROR_ID'] || 0 == $res['DS_ERROR_ID']) {
         $TransactionId = $res['DS_MERCHANT_AUTHCODE'];
 
         $returnData = [
@@ -292,8 +288,7 @@ function paycomet_capture($params){
             // Optional fee amount for the fee value refunded
             'fee' => 0,
         ];
-
-    }else{
+    } else {
         $returnData = [
             // 'success' if successful, otherwise 'declined', 'error' for failure
             'status' => 'declined',
@@ -303,9 +298,7 @@ function paycomet_capture($params){
             'rawdata' => $res,
         ];
     }
-
     return $returnData;
-
 }
 
 
@@ -361,7 +354,6 @@ function paycomet_remoteinput($params)
     $url = "https://api.paycomet.com/gateway/ifr-bankstore";
 
     if ($action == 'payment') {
-
         // PAYCOMET
         $importe = number_format($amount * 100, 0, '.', '');
 
@@ -374,12 +366,11 @@ function paycomet_remoteinput($params)
 
         // REST
         if ($apikey != "") {
-
             $merchantData = paycomet_getMerchantData($params);
-            
+
             $formFields = array();
 
-            $userInteraction = '1';
+            $userInteraction = 1;
 
             try {
                 $apiRest = new ApiRest($apikey);
@@ -410,10 +401,8 @@ function paycomet_remoteinput($params)
             } catch (Exception $e) {
                 $url = $apiResponse->challengeUrl;
             }
-
         // GET
         } else {
-
             $signature = hash('sha512', $clientcode . $term . $OPERATION . $paycomet_order_ref . $importe . $currencyCode . md5($pass));
             $formFields = array
             (
@@ -429,20 +418,16 @@ function paycomet_remoteinput($params)
                 'URLOK' => $systemUrl . 'viewinvoice.php?id=' . $invoiceId,
                 'URLKO' => $systemUrl . 'viewinvoice.php?id=' . $invoiceId
             );
-
         }
-
     } else if ($action == 'add_user') {
-
         // System Parameters
         $systemUrl = $params['systemurl'];
 
         $paycomet_order_ref = $userid;
-        $OPERATION = "107";
+        $OPERATION = 107;
 
         // REST
         if ($apikey != "") {
-
             try {
                 $apiRest = new ApiRest($apikey);
                 $apiResponse = $apiRest->form(
@@ -468,10 +453,8 @@ function paycomet_remoteinput($params)
             } catch (Exception $e) {
                 $url = $apiResponse->challengeUrl;
             }
-
         // GET
         } else {
-
             $signature = hash('sha512', $clientcode . $term . $OPERATION . $paycomet_order_ref . md5($pass));
             $formFields = array
             (
@@ -485,7 +468,6 @@ function paycomet_remoteinput($params)
                 'URLKO' => $systemUrl . 'clientarea.php?action=creditcard'
             );
         }
-
     }
 
     $htmlOutput = '<form method="get" action="' . $url . '">';
@@ -522,7 +504,6 @@ function paycomet_remoteinput($params)
  */
 function paycomet_remoteupdate($params)
 {
-
     return "Esta tarjeta no se puede editar. Si lo desea puede dar de alta una nueva y asignarla por defecto como metodo de pago.";
     global $_LANG;
     if( !$params["gatewayid"] )
@@ -546,10 +527,9 @@ function paycomet_remoteupdate($params)
 
     $paycomet_order_ref = $userid . "/" . $payMethodId; // Si estamos editando pasamos el metodo para obtenerlo en la notificación
 
-    $OPERATION = "107";
+    $OPERATION = 107;
     // REST
     if ($apikey != "") {
-
         try {
             $apiRest = new ApiRest($apikey);
             $apiResponse = $apiRest->form(
@@ -571,7 +551,6 @@ function paycomet_remoteupdate($params)
         } catch (Exception $e) {
             $url = $apiResponse->challengeUrl;
         }
-
     } else {
         $signature = hash('sha512', $clientcode . $term . $OPERATION . $paycomet_order_ref . md5($pass));
         $fields = array
@@ -592,9 +571,7 @@ function paycomet_remoteupdate($params)
 
         $url .= '?' . $query;
     }
-
     $thereturn .= "<iframe src=\"".$url . "\" height=\"650\" width=\"450\" frameborder=\"0\"></iframe><br/>";
-
     return  $thereturn;
 }
 
@@ -649,24 +626,27 @@ function paycomet_isSecureTransaction($terminales,$tdfirst,$tdmin,$importe=0,$ca
     $importe = number_format($importe * 100, 0, '.', '');
 
     // Si solo tiene Terminal Seguro
-    if ($terminales=="Seguro")
+    if ($terminales=="Seguro") {
         return true;
-
-    if ($terminales=="No-Seguro")
-        return false;
-
-    // Si esta definido que el pago es 3d secure y no estamos usando una tarjeta tokenizada
-    if ($terminales=="Ambos"){
-
-        if ($tdfirst=="Si" && $card==0)
-            return true;
-
-        // Si se supera el importe maximo para compra segura
-        if (($tdmin>0 && $tdmin < $importe))
-            return true;
-
     }
 
+    if ($terminales=="No-Seguro") {
+        return false;
+    }
+
+    // Si esta definido que el pago es 3d secure y no estamos usando una tarjeta tokenizada
+    if ($terminales=="Ambos") {
+
+        if ($tdfirst=="Si" && $card==0) {
+            return true;
+        }
+
+        // Si se supera el importe maximo para compra segura
+        if (($tdmin>0 && $tdmin < $importe)) {
+            return true;
+        }
+
+    }
     return false;
 }
 
@@ -686,10 +666,10 @@ try {
 // Verificacion de Pago Seguro
 $amount = $_SESSION['orderdetails']['TotalDue'];
 
-if (isset($_POST["ccinfo"])){
+if (isset($_POST["ccinfo"])) {
     $card = ($_POST["ccinfo"]>0)?1:0;
     setcookie("paycomet_card", $card);
-}else{
+} else {
     $card = $_COOKIE["paycomet_card"];
 }
 
@@ -698,8 +678,7 @@ $isSecureTransaction = paycomet_isSecureTransaction($terminales,$tdfirst,$tdmin,
 $secure = ($isSecureTransaction)?1:0;
 
 // Si el pago es seguro se define la funcion paycomet_3dsecure
-if ($isSecureTransaction){
-
+if ($isSecureTransaction) {
     function paycomet_3dsecure($params) {
         global $_LANG;
 
@@ -738,11 +717,11 @@ if ($isSecureTransaction){
         // REST
         if ($apikey != "") {
             try {
-                $OPERATION = "1";
+                $OPERATION = 1;
 
                 $merchantData = paycomet_getMerchantData($params);
-                $secure = '1';
-                $userInteraction = '1';
+                $secure = 1;
+                $userInteraction = 1;
 
                 $apiRest = new ApiRest($apikey);
                 $apiResponse = $apiRest->form(
@@ -769,13 +748,10 @@ if ($isSecureTransaction){
                 if ($apiResponse->errorCode==0) {
                     $url = $apiResponse->challengeUrl;
                 }
-
             } catch (Exception $e) {
                 $url = "";
             }
-
         } else {
-
             $OPERATION = "109";
 
             $signature = hash('sha512', $clientcode . $DS_IDUSER . $DS_TOKEN_USER . $term . $OPERATION . $paycomet_order_ref . $importe . $currencyCode . md5($pass));
@@ -837,7 +813,7 @@ function paycomet_refund($params)
                 $remote_ip = "127.0.0.1";
             }
         }
-    }    
+    }
 
     // Gateway Configuration Parameters
     $apikey = trim($params['apikey']);    
@@ -872,9 +848,7 @@ function paycomet_refund($params)
 
     // REST
     if ($apikey!="") {
-
         try {
-
             $notifyDirectPayment = 2; // Sin notificacion http
 
             $apiRest = new ApiRest($apikey);
@@ -903,9 +877,7 @@ function paycomet_refund($params)
         } catch (Exception $e) {
             $success = 'error';
         }
-
     } else {
-
         $client = new SoapClient( 'https://api.paycomet.com/gateway/xml-bankstore?wsdl');
 
         $p = array(
@@ -1001,7 +973,9 @@ function paycomet_getEMV3DS($params)
 
 
     $phone = "";
-    if (!empty($params["clientdetails"]["phonenumber"]))   $phone = $params["clientdetails"]["phonenumber"];
+    if (!empty($params["clientdetails"]["phonenumber"])) {
+        $phone = $params["clientdetails"]["phonenumber"];
+    }
 
     if ($phone) {
         $phone_prefix = paycomet_isoCodePhonePrefix($params["clientdetails"]["countrycode"]);
@@ -1017,8 +991,7 @@ function paycomet_getEMV3DS($params)
 
     $Merchant_EMV3DS["billing"]["billAddrCity"] = ($params["clientdetails"]["city"])?$params["clientdetails"]["city"]:"";
     $Merchant_EMV3DS["billing"]["billAddrCountry"] = ($params["clientdetails"]["country"])?$params["clientdetails"]["country"]:"";
-    if ($Merchant_EMV3DS["billing"]["billAddrCountry"] != "")
-    {
+    if ($Merchant_EMV3DS["billing"]["billAddrCountry"] != "") {
         $billAddrCountry = paycomet_isoCodeToNumber($Merchant_EMV3DS["billing"]["billAddrCountry"]);
         if ($billAddrCountry != "") {
             $Merchant_EMV3DS["billing"]["billAddrCountry"] = (int)$billAddrCountry;
@@ -1038,10 +1011,7 @@ function paycomet_getEMV3DS($params)
     $Merchant_EMV3DS["challengeWindowSize"] = 05;
 
     return $Merchant_EMV3DS;
-
 }
-
-
 
 function paycomet_isoCodeToNumber($code)
 {
@@ -1054,7 +1024,6 @@ function paycomet_isoCodeToNumber($code)
 
 function paycomet_isoCodePhonePrefix($code)
 {
-
     try {
         $arrCode = array("AC" => "247", "AD" => "376", "AE" => "971", "AF" => "93","AG" => "268", "AI" => "264", "AL" => "355", "AM" => "374", "AN" => "599", "AO" => "244", "AR" => "54", "AS" => "684", "AT" => "43", "AU" => "61", "AW" => "297", "AX" => "358", "AZ" => "374", "AZ" => "994", "BA" => "387", "BB" => "246", "BD" => "880", "BE" => "32", "BF" => "226", "BG" => "359", "BH" => "973", "BI" => "257", "BJ" => "229", "BM" => "441", "BN" => "673", "BO" => "591", "BR" => "55", "BS" => "242", "BT" => "975", "BW" => "267", "BY" => "375", "BZ" => "501", "CA" => "1", "CC" => "61", "CD" => "243", "CF" => "236", "CG" => "242", "CH" => "41", "CI" => "225", "CK" => "682", "CL" => "56", "CM" => "237", "CN" => "86", "CO" => "57", "CR" => "506", "CS" => "381", "CU" => "53", "CV" => "238", "CX" => "61", "CY" => "392", "CY" => "357", "CZ" => "420", "DE" => "49", "DJ" => "253", "DK" => "45", "DM" => "767", "DO" => "809", "DZ" => "213", "EC" => "593", "EE" => "372", "EG" => "20", "EH" => "212", "ER" => "291", "ES" => "34", "ET" => "251", "FI" => "358", "FJ" => "679", "FK" => "500", "FM" => "691", "FO" => "298", "FR" => "33", "GA" => "241", "GB" => "44", "GD" => "473", "GE" => "995", "GF" => "594", "GG" => "44", "GH" => "233", "GI" => "350", "GL" => "299", "GM" => "220", "GN" => "224", "GP" => "590", "GQ" => "240", "GR" => "30", "GT" => "502", "GU" => "671", "GW" => "245", "GY" => "592", "HK" => "852", "HN" => "504", "HR" => "385", "HT" => "509", "HU" => "36", "ID" => "62", "IE" => "353", "IL" => "972", "IM" => "44", "IN" => "91", "IO" => "246", "IQ" => "964", "IR" => "98", "IS" => "354", "IT" => "39", "JE" => "44", "JM" => "876", "JO" => "962", "JP" => "81", "KE" => "254", "KG" => "996", "KH" => "855", "KI" => "686", "KM" => "269", "KN" => "869", "KP" => "850", "KR" => "82", "KW" => "965", "KY" => "345", "KZ" => "7", "LA" => "856", "LB" => "961", "LC" => "758", "LI" => "423", "LK" => "94", "LR" => "231", "LS" => "266", "LT" => "370", "LU" => "352", "LV" => "371", "LY" => "218", "MA" => "212", "MC" => "377", "MD"  > "533", "MD" => "373", "ME" => "382", "MG" => "261", "MH" => "692", "MK" => "389", "ML" => "223", "MM" => "95", "MN" => "976", "MO" => "853", "MP" => "670", "MQ" => "596", "MR" => "222", "MS" => "664", "MT" => "356", "MU" => "230", "MV" => "960", "MW" => "265", "MX" => "52", "MY" => "60", "MZ" => "258", "NA" => "264", "NC" => "687", "NE" => "227", "NF" => "672", "NG" => "234", "NI" => "505", "NL" => "31", "NO" => "47", "NP" => "977", "NR" => "674", "NU" => "683", "NZ" => "64", "OM" => "968", "PA" => "507", "PE" => "51", "PF" => "689", "PG" => "675", "PH" => "63", "PK" => "92", "PL" => "48", "PM" => "508", "PR" => "787", "PS" => "970", "PT" => "351", "PW" => "680", "PY" => "595", "QA" => "974", "RE" => "262", "RO" => "40", "RS" => "381", "RU" => "7", "RW" => "250", "SA" => "966", "SB" => "677", "SC" => "248", "SD" => "249", "SE" => "46", "SG" => "65", "SH" => "290", "SI" => "386", "SJ" => "47", "SK" => "421", "SL" => "232", "SM" => "378", "SN" => "221", "SO" => "252", "SO" => "252", "SR"  > "597", "ST" => "239", "SV" => "503", "SY" => "963", "SZ" => "268", "TA" => "290", "TC" => "649", "TD" => "235", "TG" => "228", "TH" => "66", "TJ" => "992", "TK" =>  "690", "TL" => "670", "TM" => "993", "TN" => "216", "TO" => "676", "TR" => "90", "TT" => "868", "TV" => "688", "TW" => "886", "TZ" => "255", "UA" => "380", "UG" =>  "256", "US" => "1", "UY" => "598", "UZ" => "998", "VA" => "379", "VC" => "784", "VE" => "58", "VG" => "284", "VI" => "340", "VN" => "84", "VU" => "678", "WF" => "681", "WS" => "685", "YE" => "967", "YT" => "262", "ZA" => "27","ZM" => "260", "ZW" => "263");
         if (isset($arrCode[$code]))
@@ -1154,7 +1123,7 @@ function paycomet_haveRecurringProduct($params) {
 
     $cart = $params["cart"];
     foreach ($cart->items as $key=>$item) {
-        if (isset($item->recurring)) {            
+        if (isset($item->recurring)) {
             return true;
         }
     }
@@ -1172,7 +1141,7 @@ function paycomet_getShoppingCart($params)
         $shoppingCartData[$key]["quantity"] = number_format($item->qty, 0, '.', '');
 
         $objAmount = $item->amount;
-        $shoppingCartData[$key]["unitPrice"] = number_format($objAmount->toNumeric()*100, 0, '.', '');        
+        $shoppingCartData[$key]["unitPrice"] = number_format($objAmount->toNumeric()*100, 0, '.', '');
         $shoppingCartData[$key]["name"] = mb_substr($item->name,0,254);
     }
 
@@ -1181,13 +1150,9 @@ function paycomet_getShoppingCart($params)
 
 function paycomet_getMerchantData($params)
 {
-
-
     $MERCHANT_EMV3DS = paycomet_getEMV3DS($params);
     $SHOPPING_CART = paycomet_getShoppingCart($params);
 
-    $datos = array_merge($MERCHANT_EMV3DS,$SHOPPING_CART);    
-
-
+    $datos = array_merge($MERCHANT_EMV3DS,$SHOPPING_CART);
     return $datos;
 }
