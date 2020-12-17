@@ -8,7 +8,7 @@
  * @package    paycomet.php
  * @author     PAYCOMET <info@paycomet.com>
  * @copyright  2020 PAYCOMET
- * @version    2.3
+ * @version    2.4
  *
 **/
 
@@ -241,8 +241,8 @@ function paycomet_capture($params){
                 [],
                 $trxType,
                 'MIT',
-                $notifyDirectPayment,
-                $merchantData
+                $merchantData,
+                $notifyDirectPayment
             );
 
             $res["DS_RESPONSE"] = ($apiResponse->errorCode > 0)? 0 : 1;
