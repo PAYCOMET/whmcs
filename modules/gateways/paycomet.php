@@ -8,7 +8,7 @@
  * @package    paycomet.php
  * @author     PAYCOMET <info@paycomet.com>
  * @copyright  2020 PAYCOMET
- * @version    2.4
+ * @version    2.5
  *
 **/
 
@@ -743,7 +743,7 @@ if ($isSecureTransaction) {
                         'urlOk' => $systemUrl . 'viewinvoice.php?id=' . $invoiceId,
                         'urlKo' => $systemUrl . 'viewinvoice.php?id=' . $invoiceId
                     ]
-                );
+                );                
                 $postfields = array();
                 if ($apiResponse->errorCode==0) {
                     $url = $apiResponse->challengeUrl;
@@ -1055,21 +1055,25 @@ function paycomet_acctInfo($params)
     }
 
     $accChange = new \DateTime($customer->updated_at);
-    $acctInfoData["chAccChange"] = $accChange->format('Ymd');
-
-    $date_customer_upd = new \DateTime($customer->updated_at);
-    $diff = $date_now->diff($date_customer_upd);
-    $dias_upd = $diff->days;
-
-    if ($dias_upd==0) {
-        $acctInfoData["chAccChangeInd"] = "01";
-    } else if ($dias_upd < 30) {
-        $acctInfoData["chAccChangeInd"] = "02";
-    } else if ($dias_upd < 60) {
-        $acctInfoData["chAccChangeInd"] = "03";
-    } else {
-        $acctInfoData["chAccChangeInd"] = "04";
+    // Validamos que sea una fecha valida
+    if ($accChange->format('Y')>0) {
+        $acctInfoData["chAccChange"] = $accChange->format('Ymd');
+        
+        $date_customer_upd = new \DateTime($customer->updated_at);
+        $diff = $date_now->diff($date_customer_upd);
+        $dias_upd = $diff->days;
+    
+        if ($dias_upd==0) {
+            $acctInfoData["chAccChangeInd"] = "01";
+        } else if ($dias_upd < 30) {
+            $acctInfoData["chAccChangeInd"] = "02";
+        } else if ($dias_upd < 60) {
+            $acctInfoData["chAccChangeInd"] = "03";
+        } else {
+            $acctInfoData["chAccChangeInd"] = "04";
+        }
     }
+    
 
     $chAccDate = new \DateTime($customer->datecreated);
     $acctInfoData["chAccDate"] = $chAccDate->format('Ymd');

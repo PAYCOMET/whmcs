@@ -7,7 +7,7 @@
  *
  * @package    paycomet.php
  * @author     PAYCOMET <info@paycomet.com>
- * @version    2.4
+ * @version    2.5
  * @copyright  2020 PAYCOMET
  *
 **/
@@ -108,6 +108,17 @@ switch ($TransactionType) {
 
             $invoiceId = checkCbInvoiceID($invoiceId, $gatewayParams['name']);
 
+            // Si es pago sin tarjeta, y llega el token, lo almacenamos para futuras compras
+            if ($_POST['MethodId']==1 && isset($_POST["IdUser"])) {
+
+                $userid = Capsule::table('tblinvoices')->where('id',$invoiceId)->value('userid');
+
+                if ($userid > 0) {
+                    $resultSaveToken = saveToken($_POST, $userid, $invoiceId, $TransactionType);
+                }
+
+            }
+
             /**
              * Log Transaction.
              *
@@ -152,16 +163,7 @@ switch ($TransactionType) {
 
             $paymentSuccess = true;
 
-            // Si es pago sin tarjeta, y llega el token, lo almacenamos para futuras compras
-            if ($_POST['MethodId']==1 && isset($_POST["IdUser"])) {
-
-                $userid = Capsule::table('tblinvoices')->where('id',$invoiceId)->value('userid');
-
-                if ($userid > 0) {
-                    $resultSaveToken = saveToken($_POST, $userid, $invoiceId, $TransactionType);
-                }
-
-            }
+            
             print "PAYCOMET Payment Processed";
 
         }
