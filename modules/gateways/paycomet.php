@@ -7,13 +7,12 @@
  *
  * @package    paycomet.php
  * @author     PAYCOMET <info@paycomet.com>
- * @copyright  2020 PAYCOMET
- * @version    2.5
+ * @copyright  2021 PAYCOMET
+ * @version    2.6
  *
 **/
 
 use WHMCS\Database\Capsule;
-use WHMCS\Utility\Environment\CurrentUser;
 
 include_once 'paycomet/lib/ApiRest.php';
 
@@ -148,8 +147,16 @@ function paycomet_capture($params){
     global $remote_ip;
 
     if (!filter_var($remote_ip,FILTER_VALIDATE_IP)) {
-        $remote_ip = CurrentUser::getIP();
-
+        // WHMCS version check for $ip
+        if (version_compare(WHMCS\Config\Setting::getValue("Version"), '8', '<'))
+        {        
+            $remote_ip     = WHMCS\Utility\Environment\CurrentUser::getIP();
+        }
+        else {     
+            $user = (new WHMCS\Authentication\CurrentUser())->user();
+            $remote_ip = $user->currentIp();
+        }        
+      
         if (!filter_var($remote_ip,FILTER_VALIDATE_IP)) {
             $remote_ip = gethostbyname(gethostname());
 
@@ -804,8 +811,17 @@ function paycomet_refund($params)
     global $remote_ip;
 
     if (!filter_var($remote_ip,FILTER_VALIDATE_IP)) {
-        $remote_ip = CurrentUser::getIP();
 
+        // WHMCS version check for $ip
+        if (version_compare(WHMCS\Config\Setting::getValue("Version"), '8', '<'))
+        {        
+            $remote_ip     = WHMCS\Utility\Environment\CurrentUser::getIP();
+        }
+        else {     
+            $user = (new WHMCS\Authentication\CurrentUser())->user();
+            $remote_ip = $user->currentIp();
+        }        
+        
         if (!filter_var($remote_ip,FILTER_VALIDATE_IP)) {
             $remote_ip = gethostbyname(gethostname());
 
