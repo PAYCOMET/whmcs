@@ -7,8 +7,8 @@
  *
  * @package    paycomet.php
  * @author     PAYCOMET <info@paycomet.com>
- * @version    2.5
- * @copyright  2020 PAYCOMET
+ * @version    2.6
+ * @copyright  2021 PAYCOMET
  *
 **/
 
@@ -45,7 +45,7 @@ $invoiceId = $_POST["Order"];   // Order -> Puede ser:
                                 // 3. iduser/paymentMethod para edit_user
 
 $transactionId = $_POST["AuthCode"];
-$paymentAmount = $_POST["AmountEur"];
+$paymentAmount = number_format($_POST["Amount"] / 100, 2, ".", "");
 $Amount = $_POST["Amount"]; // Campo requerido para los pagos por token
 $hash = $_POST["ExtendedSignature"];
 $TpvID = $_POST['TpvID'];
@@ -153,6 +153,8 @@ switch ($TransactionType) {
              * @param float $paymentFee      Payment fee (optional)
              * @param string $gatewayModule  Gateway module name
              */
+
+
             addInvoicePayment(
                 $invoiceId,
                 $transactionId,
@@ -164,7 +166,7 @@ switch ($TransactionType) {
             $paymentSuccess = true;
 
             
-            print "PAYCOMET Payment Processed";
+            print "PAYCOMET Payment Processed: " . $invoiceId . "," . $transactionId . "," . $paymentAmount . ",0,"  . $gatewayModuleName;
 
         }
 
