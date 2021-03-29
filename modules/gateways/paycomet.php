@@ -8,7 +8,7 @@
  * @package    paycomet.php
  * @author     PAYCOMET <info@paycomet.com>
  * @copyright  2021 PAYCOMET
- * @version    2.6
+ * @version    2.7
  *
 **/
 
@@ -152,10 +152,12 @@ function paycomet_capture($params){
         {        
             $remote_ip     = WHMCS\Utility\Environment\CurrentUser::getIP();
         }
-        else {     
+        else {
             $user = (new WHMCS\Authentication\CurrentUser())->user();
-            $remote_ip = $user->currentIp();
-        }        
+            if ($user) {
+                $remote_ip = $user->currentIp();
+            }
+        }
       
         if (!filter_var($remote_ip,FILTER_VALIDATE_IP)) {
             $remote_ip = gethostbyname(gethostname());
@@ -819,7 +821,9 @@ function paycomet_refund($params)
         }
         else {     
             $user = (new WHMCS\Authentication\CurrentUser())->user();
-            $remote_ip = $user->currentIp();
+            if ($user) {
+                $remote_ip = $user->currentIp();
+            }
         }        
         
         if (!filter_var($remote_ip,FILTER_VALIDATE_IP)) {
