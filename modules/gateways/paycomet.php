@@ -7,8 +7,8 @@
  *
  * @package    paycomet.php
  * @author     PAYCOMET <info@paycomet.com>
- * @copyright  2021 PAYCOMET
- * @version    2.7
+ * @copyright  PAYCOMET
+ * @version    2.8
  *
 **/
 
@@ -630,7 +630,7 @@ function paycomet_adminstatusmsg($params)
 
 function paycomet_isSecureTransaction($terminales,$tdfirst,$tdmin,$importe=0,$card=0){
 
-    $tdmin = str_replace(",",".",$tdmin); // Por si se han definido los decimales con ","
+    $tdmin = (float)str_replace(",",".",$tdmin); // Por si se han definido los decimales con ","
     $tdmin = number_format($tdmin * 100, 0, '.', '');
     $importe = number_format($importe * 100, 0, '.', '');
 
