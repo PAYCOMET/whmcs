@@ -1,0 +1,23 @@
+{
+  "schema": "1.0",
+  "type": "whmcs-gateways",
+  "name": "paycomet",
+  "license": "proprietary",
+  "category": "payments",
+  "description": {
+    "name": "Paycomet",
+    "tagline": "Paycomet payment gateway."
+  },
+  "logo": {
+    "filename": "logo.png"
+  },
+  "support": {
+    "docs_url": "https://docs.paycomet.com/es/modulos-de-pago/whmcs"
+  },
+  "authors": [
+    {
+      "name": "PAYCOMET",
+      "homepage": "https:\/\/www.paycomet.com\/"
+    }
+  ]
+}

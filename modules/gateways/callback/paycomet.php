@@ -7,7 +7,7 @@
  *
  * @package    paycomet.php
  * @author     PAYCOMET <info@paycomet.com>
- * @version    2.8
+ * @version    2.9
  * @copyright  PAYCOMET
  *
 **/
@@ -82,6 +82,8 @@ switch ($TransactionType) {
 
 if ($NotificationHash != $local_sign) {
     $transactionStatus = 'Hash Verification Failure';
+    logTransaction($gatewayParams['name'], $_POST, $transactionStatus);
+    die($transactionStatus);
     $success = false;
 } else {
     $success = true;
