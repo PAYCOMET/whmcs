@@ -7,7 +7,7 @@
  *
  * @package    paycomet.php
  * @author     PAYCOMET <info@paycomet.com>
- * @version    2.9
+ * @version    2.10
  * @copyright  PAYCOMET
  *
 **/
@@ -52,6 +52,7 @@ $TpvID = $_POST['TpvID'];
 $TransactionType = $_POST['TransactionType'];
 $Currency = $_POST['Currency'];
 $BankDateTime = $_POST['BankDateTime'];
+$DateTime = $_POST['DateTime'] ?? '';
 $NotificationHash = $_POST["NotificationHash"];
 
 $transactionStatus = $success ? 'Success' : 'Failure';
@@ -75,8 +76,8 @@ switch ($TransactionType) {
     case 1: // execute_purchase
         $local_sign = hash('sha512',$clientcode.$TpvID.$TransactionType.$invoiceId.$Amount.$Currency.md5($pass).$BankDateTime.$response);
         break;
-    case 107: // add_user
-        $local_sign = hash('sha512',$clientcode.$TpvID.$TransactionType.$invoiceId.$BankDateTime.md5($pass));
+    case 107: // add_user        
+        $local_sign = hash('sha512',$clientcode.$TpvID.$TransactionType.$invoiceId.$DateTime.md5($pass));
         break;
 }
 
