@@ -8,7 +8,7 @@
  * @package    paycomet.php
  * @author     PAYCOMET <info@paycomet.com>
  * @copyright  PAYCOMET
- * @version    2.9
+ * @version    2.10
  *
 **/
 
@@ -628,7 +628,7 @@ function paycomet_adminstatusmsg($params)
 }
 
 
-function paycomet_isSecureTransaction($terminales,$tdfirst,$tdmin,$importe=0,$card=0){
+function paycomet_isSecureTransaction($terminales, $tdfirst, $tdmin, $importe=0, $card=0){
 
     $tdmin = (float)str_replace(",",".",$tdmin); // Por si se han definido los decimales con ","
     $tdmin = number_format($tdmin * 100, 0, '.', '');
@@ -656,6 +656,15 @@ function paycomet_isSecureTransaction($terminales,$tdfirst,$tdmin,$importe=0,$ca
         }
 
     }
+
+    // Si estoy en un proceso de cron -> false
+    if (defined('IN_CRON')) {
+        return false;
+    // Si estoy logado -> true
+    } elseif (isset($_SESSION['uid']) && $_SESSION['uid'] > 0) {
+        return true;        
+    }
+
     return false;
 }
 
@@ -682,7 +691,7 @@ if (isset($_POST["ccinfo"])) {
     $card = $_COOKIE["paycomet_card"];
 }
 
-$isSecureTransaction = paycomet_isSecureTransaction($terminales,$tdfirst,$tdmin,$amount,$card);
+$isSecureTransaction = paycomet_isSecureTransaction($terminales, $tdfirst, $tdmin, $amount, $card);
 
 $secure = ($isSecureTransaction)?1:0;
 
@@ -690,7 +699,7 @@ $secure = ($isSecureTransaction)?1:0;
 if ($isSecureTransaction) {
     function paycomet_3dsecure($params) {
         global $_LANG;
-
+        
         $language = paycomet_getLang($_LANG['locale']);
 
         // Gateway Configuration Parameters
@@ -760,6 +769,11 @@ if ($isSecureTransaction) {
             } catch (Exception $e) {
                 $url = "";
             }
+
+            if ($url != "") {
+                header("Location: " . $url);
+                exit;
+            }
         } else {
             $OPERATION = "109";
 
@@ -783,17 +797,17 @@ if ($isSecureTransaction) {
 
             $url = "https://api.paycomet.com/gateway/ifr-bankstore";
 
+            $htmlOutput = '<form method="get" action="'.$url.'">';
+            foreach ($postfields as $k => $v) {
+                $htmlOutput .= '<input type="hidden" name="' . $k . '" value="' . $v . '" />';
+            }
+
+            $htmlOutput .= '<input type="submit" value="' . $langPayNow . '" />';
+            $htmlOutput .= '</form>';
+
+            return $htmlOutput;
+
         }
-
-        $htmlOutput = '<form method="get" action="'.$url.'">';
-        foreach ($postfields as $k => $v) {
-            $htmlOutput .= '<input type="hidden" name="' . $k . '" value="' . $v . '" />';
-        }
-
-        $htmlOutput .= '<input type="submit" value="' . $langPayNow . '" />';
-        $htmlOutput .= '</form>';
-
-        return $htmlOutput;
     }
 }
 
@@ -1109,7 +1123,7 @@ function paycomet_acctInfo($params)
 }
 
 
-function paycomet_numPurchaseCustomer($id_customer,$valid=1,$interval=1,$intervalType="day")
+function paycomet_numPurchaseCustomer($id_customer, $valid=1, $interval=1, $intervalType="day")
 {
     try {
         $from = new \DateTime("now");
