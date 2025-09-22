@@ -7,7 +7,7 @@
  *
  * @package    paycomet.php
  * @author     PAYCOMET <info@paycomet.com>
- * @version    2.10
+ * @version    2.11
  * @copyright  PAYCOMET
  *
 **/
@@ -44,7 +44,7 @@ $invoiceId = $_POST["Order"];   // Order -> Puede ser:
                                 // 2. iduser para el add_user
                                 // 3. iduser/paymentMethod para edit_user
 
-$transactionId = $_POST["AuthCode"];
+$transactionId = $_POST["AuthCode"] . "-" . $_POST['TpvID'] . "-" . $_POST['Order'];
 $paymentAmount = number_format($_POST["Amount"] / 100, 2, ".", "");
 $Amount = $_POST["Amount"]; // Campo requerido para los pagos por token
 $hash = $_POST["ExtendedSignature"];
