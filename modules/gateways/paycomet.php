@@ -8,7 +8,7 @@
  * @package    paycomet.php
  * @author     PAYCOMET <info@paycomet.com>
  * @copyright  PAYCOMET
- * @version    2.10
+ * @version    2.11
  *
 **/
 
@@ -256,7 +256,7 @@ function paycomet_capture($params){
 
             $res["DS_RESPONSE"] = ($apiResponse->errorCode > 0)? 0 : 1;
             $res["DS_ERROR_ID"] = $apiResponse->errorCode;
-            $res["DS_MERCHANT_AUTHCODE"] = $apiResponse->authCode;
+            $res["DS_MERCHANT_AUTHCODE"] = $apiResponse->authCode . "-" . $DS_MERCHANT_TERMINAL . "-" . $DS_MERCHANT_ORDER;
             $res["DS_MERCHANT_AMOUNT"] = $apiResponse->amount;
 
         } catch (Exception $e) {
@@ -285,7 +285,7 @@ function paycomet_capture($params){
     }
 
     if ('' == $res['DS_ERROR_ID'] || 0 == $res['DS_ERROR_ID']) {
-        $TransactionId = $res['DS_MERCHANT_AUTHCODE'];
+        $TransactionId = $res['DS_MERCHANT_AUTHCODE'] . "-" . $DS_MERCHANT_TERMINAL . "-" . $DS_MERCHANT_ORDER;
 
         $returnData = [
             // 'success' if successful, otherwise 'declined', 'error' for failure
@@ -859,6 +859,8 @@ function paycomet_refund($params)
 
     // Transaction Parameters
     $transactionIdToRefund = $params['transid'];
+    $datoTransaction = explode( "-", $transactionIdToRefund );
+    $transactionIdToRefund = $datoTransaction[0];
     $refundAmount = $params['amount'];
     $currencyCode = $params['currency'];
 
@@ -904,8 +906,8 @@ function paycomet_refund($params)
 
             if ($response["DS_RESPONSE"]==1) {
                 $success = 'success';
-                $refundTransactionId = $apiResponse->authCode;
-                $response["DS_MERCHANT_AUTHCODE"] = $apiResponse->authCode;
+                $refundTransactionId = $apiResponse->authCode . "-" . $DS_MERCHANT_TERMINAL . "-" . $DS_MERCHANT_ORDER;
+                $response["DS_MERCHANT_AUTHCODE"] = $refundTransactionId;
                 $responseData = $response;
             }
         } catch (Exception $e) {
@@ -935,7 +937,7 @@ function paycomet_refund($params)
         if ('' == $res['DS_ERROR_ID'] || 0 == $res['DS_ERROR_ID']) {
             $success = 'success';
             $responseData = $res;
-            $refundTransactionId = $res['DS_MERCHANT_AUTHCODE'];
+            $refundTransactionId = $res['DS_MERCHANT_AUTHCODE'] . "-" . $DS_MERCHANT_TERMINAL . "-" . $DS_MERCHANT_ORDER;
         }
     }
 
