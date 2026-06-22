@@ -7,7 +7,7 @@
  *
  * @package    paycomet.php
  * @author     PAYCOMET <info@paycomet.com>
- * @version    2.11
+ * @version    2.12
  * @copyright  PAYCOMET
  *
 **/
@@ -81,13 +81,11 @@ switch ($TransactionType) {
         break;
 }
 
+// Validamos la firma
 if ($NotificationHash != $local_sign) {
     $transactionStatus = 'Hash Verification Failure';
     logTransaction($gatewayParams['name'], $_POST, $transactionStatus);
-    die($transactionStatus);
-    $success = false;
-} else {
-    $success = true;
+    die($transactionStatus);    
 }
 
 switch ($TransactionType) {
@@ -166,11 +164,12 @@ switch ($TransactionType) {
                 $gatewayModuleName
             );
 
-            $paymentSuccess = true;
-
-            
+            $paymentSuccess = true;           
             print "PAYCOMET Payment Processed: " . $invoiceId . "," . $transactionId . "," . $paymentAmount . ",0,"  . $gatewayModuleName;
 
+        } else {
+            // Se registra el fallo en el log pero NO se procesa el pago
+            logTransaction($gatewayParams['name'], $_POST, $transactionStatus);
         }
 
     break;
