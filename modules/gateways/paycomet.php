@@ -8,7 +8,7 @@
  * @package    paycomet.php
  * @author     PAYCOMET <info@paycomet.com>
  * @copyright  PAYCOMET
- * @version    2.11
+ * @version    2.12
  *
 **/
 
