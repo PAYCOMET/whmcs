@@ -7,7 +7,7 @@
  *
  * @package    paycomet.php
  * @author     PAYCOMET <info@paycomet.com>
- * @version    2.12
+ * @version    2.13
  * @copyright  PAYCOMET
  *
 **/
@@ -24,8 +24,6 @@ App::load_function('invoice');
 // Detect module name from filename.
 $gatewayModuleName = basename(__FILE__, '.php');
 
-
-
 // Fetch gateway configuration parameters.
 $gatewayParams = getGatewayVariables($gatewayModuleName);
 
@@ -35,17 +33,51 @@ if (!$gatewayParams['type']) {
     die("Module Not Activated");
 }
 
+
+/**
+ * Sanitiza los datos recibidos antes de registrar la transacción en WHMCS.
+ *
+ * @param array $data Payload recibido en $_POST
+ * @return array Payload sanitizado para logTransaction
+ */
+function sanitizeLogData($data) {    
+    $sanitized = $data;
+    
+    if (isset($data['Signature']) && !empty($data['Signature'])) {
+        $sanitized['Signature'] = substr($data['Signature'], 0, 6) . '...' . substr($data['Signature'], -4);
+    }
+
+    if (isset($data['AccountCode']) && !empty($data['AccountCode'])) {
+        $sanitized['AccountCode'] = substr($data['AccountCode'], 0, 2) . '...' . substr($data['AccountCode'], -2);
+    }
+
+    if (isset($data['ExtendedSignature']) && !empty($data['ExtendedSignature'])) {
+        $sanitized['ExtendedSignature'] = substr($data['ExtendedSignature'], 0, 6) . '...' . substr($data['ExtendedSignature'], -4);
+    }
+
+    if (isset($data['NotificationHash']) && !empty($data['NotificationHash'])) {
+        $sanitized['NotificationHash'] = substr($data['NotificationHash'], 0, 6) . '...' . substr($data['NotificationHash'], -6);
+    }
+
+    if (isset($data['TokenUser']) && !empty($data['TokenUser'])) {
+        $sanitized['TokenUser'] = substr($data['TokenUser'], 0, 5) . '...' . substr($data['TokenUser'], -5);
+    }
+
+    return $sanitized;
+
+}
+
 // Retrieve data returned in payment gateway callback
 // Varies per payment gateway
-$success = ($_POST["Response"]=="OK")?1:0;
-$response = $_POST["Response"];
+$success = ($_POST["Response"] == "OK") ? 1 : 0;
+$response = $_POST["Response"] ?? '';
 $invoiceId = $_POST["Order"];   // Order -> Puede ser:
                                 // 1. order para el pago.
                                 // 2. iduser para el add_user
                                 // 3. iduser/paymentMethod para edit_user
 
-$transactionId = $_POST["AuthCode"] . "-" . $_POST['TpvID'] . "-" . $_POST['Order'];
-$paymentAmount = number_format($_POST["Amount"] / 100, 2, ".", "");
+$transactionId = ($_POST["AuthCode"] ?? '') . "-" . ($_POST['TpvID'] ?? '') . "-" . ($_POST['Order'] ?? '');
+$paymentAmount = number_format(($_POST["Amount"] ?? 0) / 100, 2, ".", "");
 $Amount = $_POST["Amount"]; // Campo requerido para los pagos por token
 $hash = $_POST["ExtendedSignature"];
 $TpvID = $_POST['TpvID'];
@@ -68,7 +100,6 @@ $apikey = trim($gatewayParams['apikey']);
 $secretKey = $gatewayParams['pass'];
 $clientcode = $gatewayParams['clientcode'];
 $pass = $gatewayParams['pass'];
-
 $systemUrl = $gatewayParams['systemurl'];
 
 
@@ -76,16 +107,19 @@ switch ($TransactionType) {
     case 1: // execute_purchase
         $local_sign = hash('sha512',$clientcode.$TpvID.$TransactionType.$invoiceId.$Amount.$Currency.md5($pass).$BankDateTime.$response);
         break;
-    case 107: // add_user        
+    case 107: // add_user
         $local_sign = hash('sha512',$clientcode.$TpvID.$TransactionType.$invoiceId.$DateTime.md5($pass));
+        break;
+    default:
+        $local_sign = '';
         break;
 }
 
 // Validamos la firma
 if ($NotificationHash != $local_sign) {
     $transactionStatus = 'Hash Verification Failure';
-    logTransaction($gatewayParams['name'], $_POST, $transactionStatus);
-    die($transactionStatus);    
+    logTransaction($gatewayParams['name'], sanitizeLogData($_POST), $transactionStatus);
+    die($transactionStatus);
 }
 
 switch ($TransactionType) {
@@ -110,8 +144,7 @@ switch ($TransactionType) {
             $invoiceId = checkCbInvoiceID($invoiceId, $gatewayParams['name']);
 
             // Si es pago sin tarjeta, y llega el token, lo almacenamos para futuras compras
-            if ($_POST['MethodId']==1 && isset($_POST["IdUser"])) {
-
+            if ($_POST['MethodId'] == 1 && isset($_POST["IdUser"])) {
                 $userid = Capsule::table('tblinvoices')->where('id',$invoiceId)->value('userid');
 
                 if ($userid > 0) {
@@ -131,7 +164,7 @@ switch ($TransactionType) {
              * @param string|array $debugData Data to log
              * @param string $transactionStatus Status
              */
-            logTransaction($gatewayParams['name'], $_POST, $transactionStatus);
+            logTransaction($gatewayParams['name'], sanitizeLogData($_POST), $transactionStatus);
 
             /**
              * Check Callback Transaction ID.
@@ -164,12 +197,12 @@ switch ($TransactionType) {
                 $gatewayModuleName
             );
 
-            $paymentSuccess = true;           
+            $paymentSuccess = true;
             print "PAYCOMET Payment Processed: " . $invoiceId . "," . $transactionId . "," . $paymentAmount . ",0,"  . $gatewayModuleName;
 
         } else {
             // Se registra el fallo en el log pero NO se procesa el pago
-            logTransaction($gatewayParams['name'], $_POST, $transactionStatus);
+            logTransaction($gatewayParams['name'], sanitizeLogData($_POST), $transactionStatus);
         }
 
     break;
@@ -181,14 +214,22 @@ switch ($TransactionType) {
     break;
 }
 
-
+/**
+ * Save the token and card information in WHMCS.
+ *
+ * @param array $arrData Data received from the callback
+ * @param mixed $userid User ID or Customer ID depending on the transaction type
+ * @param int $invoiceId Invoice ID (default is 0)
+ * @param int $TransactionType Type of transaction (default is 1)
+ * @return bool True if successful, false otherwise
+ */
 function saveToken($arrData, $userid, $invoiceId = 0, $TransactionType=1) {
     global $remote_ip, $apikey, $clientcode, $TpvID, $pass, $gatewayModuleName;
     $arrGatewayId = array($arrData["IdUser"],$arrData["TokenUser"]);
 
     // Obtenemos información de la tarjeta
     try {
-        if ($remote_ip=="") {
+        if ($remote_ip == "") {
             $remote_ip = "127.0.0.1";
         }
 
@@ -204,10 +245,10 @@ function saveToken($arrData, $userid, $invoiceId = 0, $TransactionType=1) {
                     $arrData["TokenUser"],
                     $TpvID
                 );
-                if ($apiResponse->errorCode==0) {
+                if ($apiResponse->errorCode == 0) {
                     $arrExpDate = explode("/",$apiResponse->expiryDate);
-                    $cardExpiryDate = $arrExpDate[1] . substr($arrExpDate[0],2,2);
-                    $cardnum = substr($apiResponse->pan,-4);
+                    $cardExpiryDate = $arrExpDate[1] . substr($arrExpDate[0], 2, 2);
+                    $cardnum = substr($apiResponse->pan, -4);
                     $cardBrand = $apiResponse->cardBrand;
                 }
             } catch (exception $e){}
@@ -225,27 +266,27 @@ function saveToken($arrData, $userid, $invoiceId = 0, $TransactionType=1) {
             );
 
             $client = new SoapClient('https://api.paycomet.com/gateway/xml-bankstore?wsdl');
-            $res = $client->__soapCall( 'info_user', $p);
+            $res = $client->__soapCall('info_user', $p);
 
             if ('' == $res['DS_ERROR_ID'] || 0 == $res['DS_ERROR_ID']) {
-                $arrExpDate = explode("/",$res['DS_EXPIRYDATE']);
+                $arrExpDate = explode("/", $res['DS_EXPIRYDATE']);
                 $cardExpiryDate = $arrExpDate[1] . substr($arrExpDate[0],2,2);
-                $cardnum = substr($res['DS_MERCHANT_PAN'],-4);
+                $cardnum = substr($res['DS_MERCHANT_PAN'], -4);
                 $cardBrand = $res['DS_CARD_BRAND'];
             }
 
         }
 
-        if ($TransactionType==1) {
+        if ($TransactionType == 1) {
             // Create a pay method for the newly created remote token.
-            invoiceSaveRemoteCard($invoiceId, $cardnum, $cardBrand, $cardExpiryDate, implode( ",", $arrGatewayId ));
+            invoiceSaveRemoteCard($invoiceId, $cardnum, $cardBrand, $cardExpiryDate, implode( ",", $arrGatewayId));
 
-        } else if ($TransactionType==107) {
-            $arrDatos = explode("/",$userid);
+        } else if ($TransactionType == 107) {
+            $arrDatos = explode("/", $userid);
             $action = "";
             try {
                 // add_user, no llega el metodo de pago
-                if (sizeof($arrDatos)==1) {
+                if (sizeof($arrDatos) == 1) {
                     $action = "Create";
                     // Function available in WHMCS 7.9 and later
                     createCardPayMethod(
@@ -256,9 +297,9 @@ function saveToken($arrData, $userid, $invoiceId = 0, $TransactionType=1) {
                         $cardBrand,
                         null, //start date
                         null, //issue number
-                        implode( ",", $arrGatewayId )
+                        implode( ",", $arrGatewayId)
                     );
-                } else if (sizeof($arrDatos)==2) {
+                } else if (sizeof($arrDatos) == 2) {
                     // Function available in WHMCS 7.9 and later
                     $action = "Update";
                     $customerId = $arrDatos[0];
@@ -270,25 +311,21 @@ function saveToken($arrData, $userid, $invoiceId = 0, $TransactionType=1) {
                         $cardExpiryDate,
                         null, // card start date
                         null, // card issue number
-                        implode( ",", $arrGatewayId )
+                        implode( ",", $arrGatewayId)
                     );
 
                 }
 
                 // Log to gateway log as successful.
-                logTransaction($gatewayModuleName, $_POST, $action .' Success');
+                logTransaction($gatewayModuleName, sanitizeLogData($arrData), $action . ' Success');
             } catch (Exception $e) {
                 // Log to gateway log as unsuccessful.
-                logTransaction($gatewayModuleName, $_POST, $action .' Failed');
+                logTransaction($gatewayModuleName, sanitizeLogData($arrData), $action . ' Failed');
 
             }
         }
-
-        /*
-        // Save token, remove cardnumer
-        full_query("UPDATE tblclients set expdate = AES_ENCRYPT('". $expDate ."','". $cchash. "') WHERE id = ". $userid);
-        update_query( "tblclients", array( "gatewayid" => implode( ",", $arrGatewayId ), "cardlastfour" => $lastFour, "cardtype" => $cardBrand), array("id" => $userid));
-        */
         return true;
-    } catch (exception $e) { return false;}
+    } catch (exception $e) {
+        return false;
+    }
 }

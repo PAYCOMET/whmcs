@@ -1,7 +1,7 @@
 <?php
 
 /**
- * API REST de PAYCOMET para PHP. 
+ * API REST de PAYCOMET para PHP.
  *
  * NOTICE OF LICENSE
  *
@@ -10,7 +10,7 @@
  * This source file is subject to the 3-clause BSD License that is
  * bundled with this package in the LICENSE file.
  *
- * @package    PAYCOMET 
+ * @package    PAYCOMET
  * @copyright  (c) 2020, PAYCOMET
  * @link       https://www.paycomet.com
  */
@@ -239,7 +239,7 @@ class ApiRest
         $merchantData = []
     ) {
         $params = [
-            "subscription" => 
+            "subscription" =>
             [
                 "startDate"             => (string) $startDate,
                 "endDate"               => (string) $endDate,
@@ -319,13 +319,12 @@ class ApiRest
                 CURLOPT_URL                 => $url,
                 CURLOPT_RETURNTRANSFER      => true,
                 CURLOPT_MAXREDIRS           => 3,
-                CURLOPT_TIMEOUT             => 120,
+                CURLOPT_TIMEOUT             => 60,
                 CURLOPT_FOLLOWLOCATION      => true,
-                CURLOPT_HTTP_VERSION        => CURL_HTTP_VERSION_1_1,
-                CURLOPT_CUSTOMREQUEST       => "POST",
+                CURLOPT_POST                => true,
                 CURLOPT_POSTFIELDS          => $jsonParams,
                 CURLOPT_HTTPHEADER          => array(
-                    "PAYCOMET-API-TOKEN: $this->apiKey",
+                    "PAYCOMET-API-TOKEN: " . $this->apiKey,
                     "Content-Type: application/json"
             ),
         ));
